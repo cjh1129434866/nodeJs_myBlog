@@ -80,6 +80,28 @@ module.exports.login = async (ctx) => {
         status: '密码不正确，登陆失败'
       })
     }
+
+    // 让用户在他的 cookie 里设置 username password 加密后的 密码 权限
+    ctx.cookies.set('username', username, {
+      domain: 'localhost', // 主机名
+      path: '/', // 所有页面
+      maxAge: 36e5, // 过期时间
+      httpOnly: true, // true  不让用户端 访问 这个cookie
+      overwrite: false // 这里不要覆盖
+    })
+    // 用户在 数据库 的 id值
+    ctx.cookies.set('uid', data[0]._id, {
+      domain: 'localhost', // 主机名
+      path: '/', 
+      maxAge: 36e5,
+      httpOnly: true,
+      overwrite: false 
+    })
+    ctx.session = {
+      username,
+      uid: data[0]._id,
+      avatar: data[0].avatar
+    }
     // 登陆 成功
     await ctx.render('isOk', {
       status: '登陆成功'
@@ -98,7 +120,29 @@ module.exports.login = async (ctx) => {
   })
 }
 
-// 用户 登陆  状态
-module.exports.keepLog = async ctx => {
-  console.log(ctx)
+// 用户 登陆  状态 , 保持 登陆 状态
+module.exports.keepLog = async (ctx, next) => {
+  // 当session里面没有存储 的 时候 ，session下面 会有 一个 默认 的 isNew; 值为 true
+ console.log(ctx.session.isNew)
+ if (ctx.session.isNew) { // 如果isNew === true 表明 session没有
+   if (ctx.cookies.get('username')) {
+     ctx.session = {
+       username: ctx.cookies.get('username'),
+       uid: ctx.cookies.get('uid')
+     } 
+   }
+ }
+  await next()
 }
+
+module.exports.logout = async ctx => {
+  ctx.session = null
+  ctx.cookies.set('username', null, {
+    maxAge: 0
+  })
+  ctx.cookies.set('uid', null, {
+    maxAge: 0
+  })
+  // 在后台 对 路由 重定向
+  ctx.redirect('/')
+} 

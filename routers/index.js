@@ -1,12 +1,11 @@
 const Router = require('koa-router')
 const router = new Router
 const user = require('../control/user')
+const article = require('../control/article')
 
-router.get('/', user.keepLog, async (ctx) => { 
-  await ctx.render('index.pug', {  // .pug 可以省略
-    title: '这是一个 假装的 title'
-  })
-})
+router.get('/', user.keepLog, article.getList)
+
+router.get('/user/logout', user.logout)
 
 // 这里 主要用作 用户 的 登陆/注册
 // router.get("/user/:id", async (ctx) => { // 动态路由
@@ -37,4 +36,14 @@ router.post('/user/reg', user.reg)
 // })
 
 router.post('/user/login', user.login)
+
+// 文章 发表页面
+router.get('/article', user.keepLog, article.addPage)
+
+// 发表文章
+router.post('/article', user.keepLog, article.add)
+
+// 查询 文章
+router.get('/page/:id', article.getList)
+
 module.exports = router

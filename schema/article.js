@@ -8,7 +8,8 @@ const ArticleSchema = new Schema({
     type: ObjectId, // 数据类型
     ref: 'users'  // 关联 'users' 这个集合（db.model()得第一个参数 怎么写，这里就怎么写）
   },
-  tips: String
+  tips: String,
+  commentNum: Number
 }, { versionKey: false, timestamps: {
   createdAt: "created"
 } })

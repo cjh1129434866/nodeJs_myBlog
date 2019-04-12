@@ -1,11 +1,14 @@
 const { db } = require('../schema/config')
-const { ArticleSchema } = require('../schema/article')
 
+const { ArticleSchema } = require('../schema/article')
 const Article = db.model('articles', ArticleSchema)
 
 // 取到 users集合 得 schema 来 生成 可以操作 users 集合得 实例
 const  { userSchema } = require('../schema/user.js')
 const User = db.model('users', userSchema)
+
+const { CommentSchema } = require('../schema/comment')
+const Comment = db.model('comments', CommentSchema)
 
 // 返回文章发表页
 exports.addPage = async ctx => {
@@ -30,6 +33,8 @@ exports.add = async ctx => {
   const data = ctx.request.body
   // data里面 没有 文章的 作者，所以 要 添加 文章的 作者
   data.author = ctx.session.uid
+  // 初始化 文章 评论 数量
+  data.commentNum = 0 
 
   // new Article(data)
   //   .save()  // save() 里面 可以写 回调，注意： 这里的回调 跟 then() 只能写一个
@@ -41,6 +46,10 @@ exports.add = async ctx => {
         if (err) {
           return reject(err) 
         } else {
+          User.update({_id: data.author}, {$inc: {articleNum: 1}}, (err) => {
+            if (err) return console.log(err)
+            console.log('users集合 的 文章计数器更新成功')
+          })
           resolve(data)
         }
       })
@@ -89,4 +98,31 @@ exports.getList = async ctx => {
     artList,
     maxNum
   })
+}
+
+// 获取文章详情页
+exports.details = async ctx => {
+  const _id = ctx.params.id
+
+  // 查找文章数据
+  const article = await Article.findById(_id)
+    .populate('author', 'username')
+    .then(data => data)
+
+  // 查找关于文章的 所有 评论
+  const comment = await Comment
+    .find({ article: _id })
+    .sort('-created')
+    .populate('from', 'username avatar')
+    .then(data => data)
+    .catch(err => console.log(err))
+
+  console.log(comment)
+
+  await ctx.render('article', {
+    title: article.title,
+    article,
+    session: ctx.session,
+    comment
+  })  
 }

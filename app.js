@@ -37,3 +37,36 @@ app.use(router.routes()).use(router.allowedMethods())
 app.listen(3000, () => {
   console.log('监听3000端口')
 })
+
+{
+  // 创建管理员账户
+  const { db } = require('./schema/config.js')
+  const  { userSchema } = require('./schema/user.js')
+  const encrypto = require('./util/crypt')
+  const User = db.model('users', userSchema)
+  // 初始化管理员账户 admin  密码 admin
+  User
+    .find({username: 'admin'})
+    .then(data => {
+      if (data.length === 0) {
+        // 没有则创建
+        new User({
+          username: 'admin',
+          password: encrypto('admin'),
+          role: '666',
+          commentNum: 0,
+          articleNum: 0
+        })
+        .save()
+        .then(data => {
+          console.log('管理源用户名admin密码admin')
+        })
+        .catch(err => {
+          console.log('管理员账号检查失败')
+        })
+      } else {
+        // 有则 console.log()
+        console.log('{admin: admin}')
+      }
+    })
+}

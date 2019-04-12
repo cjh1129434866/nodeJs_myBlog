@@ -27,7 +27,9 @@ module.exports.reg = async (ctx) => {
       // 用户名 不存在 需要 存储到 数据库。 用户密码 需要 加密
       const _user = new User({
         username,
-        password: encrypto(password)
+        password: encrypto(password),
+        commentNum: 0,
+        articleNum: 0
       })
       _user.save((err, data) => {
         if (err) {
@@ -100,7 +102,8 @@ module.exports.login = async (ctx) => {
     ctx.session = {
       username,
       uid: data[0]._id,
-      avatar: data[0].avatar
+      avatar: data[0].avatar,
+      role: data[0].role
     }
     // 登陆 成功
     await ctx.render('isOk', {

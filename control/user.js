@@ -1,9 +1,6 @@
-const { db } = require('../schema/config.js')
-const  { userSchema } = require('../schema/user.js')
-const encrypto = require('../util/crypt')
-// 把 schema 规范 作用于 userSchema 这个表，只有 db.model() 返回 出来 的 这个 对象 才有 权力 去 查询 表
-const User = db.model('users', userSchema)
+const { User,  Comment } = require('../models/models')
 
+const encrypto = require('../util/crypt')
 // 用户 注册
 module.exports.reg = async (ctx) => {
   console.log('这是处理 用户注册的中间件')
@@ -129,9 +126,13 @@ module.exports.keepLog = async (ctx, next) => {
  console.log(ctx.session.isNew)
  if (ctx.session.isNew) { // 如果isNew === true 表明 session没有
    if (ctx.cookies.get('username')) {
+     const uid = ctx.cookies.get('uid')
+     const avatar = await User.findById(uid)
+      .then(data => data.avatar)
      ctx.session = {
        username: ctx.cookies.get('username'),
-       uid: ctx.cookies.get('uid')
+       uid,
+       avatar
      } 
    }
  }
@@ -149,3 +150,29 @@ module.exports.logout = async ctx => {
   // 在后台 对 路由 重定向
   ctx.redirect('/')
 } 
+
+
+// 用户的 头像 上传
+module.exports.upload = async ctx => {
+  // 文件名
+  const filename = ctx.req.file.filename
+  console.log(filename)
+  let data = {}
+
+  // 更新用户 文档 里面 存储的 头像 路径
+  await User.update({_id: ctx.session.uid}, {$set: {avatar: '/avatar/' + filename}}, err => {
+    if (err) {
+      data = {
+        status: 0,
+        message: '上传失败'
+      }
+    } else {
+      data = {
+        status: 1,
+        message: '上传成功'
+      }
+    }
+  })
+
+  ctx.body = data
+}

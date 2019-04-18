@@ -1,14 +1,4 @@
-const { db } = require('../schema/config')
-
-const { ArticleSchema } = require('../schema/article')
-const Article = db.model('articles', ArticleSchema)
-
-// 取到 users集合 得 schema 来 生成 可以操作 users 集合得 实例
-const  { userSchema } = require('../schema/user.js')
-const User = db.model('users', userSchema)
-
-const { CommentSchema } = require('../schema/comment')
-const Comment = db.model('comments', CommentSchema)
+const { Article, User,  Comment } = require('../models/models')
 
 const fs = require('fs')
 const { join } = require('path')

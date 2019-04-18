@@ -12,6 +12,16 @@ const ArticleSchema = new Schema({
   commentNum: Number
 }, { versionKey: false, timestamps: {
   createdAt: "created"
-} })
+}})
+
+ArticleSchema.post('remove', (doc) => {
+  // 用户 的 articleNum -1  与 文章 关联的 所有 评论 remove
+  const { User, Comment } = require('../models/models')
+  const { author : uid,  _id : articleId } = doc
+  User.findByIdAndUpdate({_id: uid}, {$inc: {articleNum : -1}}).exec()
+  Comment.find({article: articleId}).then(data => {
+    data.forEach(k => k.remove())
+  })
+})
 
 module.exports.ArticleSchema = ArticleSchema

@@ -1,15 +1,4 @@
-const { db } = require('../schema/config')
-
-const { ArticleSchema } = require('../schema/article')
-const Article = db.model('articles', ArticleSchema)
-
-// 取到 users集合 得 schema 来 生成 可以操作 users 集合得 实例
-const  { userSchema } = require('../schema/user.js')
-const User = db.model('users', userSchema)
-
-const { CommentSchema } = require('../schema/comment')
-const Comment = db.model('comments', CommentSchema)
-
+const { Article, User,  Comment } = require('../models/models')
 // 返回文章发表页
 exports.addPage = async ctx => {
   await ctx.render('add-article', {
@@ -125,4 +114,38 @@ exports.details = async ctx => {
     session: ctx.session,
     comment
   })  
+}
+
+// 获取 当前用户 文章  列表数据
+exports.getArtList = async ctx => {
+  const uid = ctx.session.uid
+
+  const data = await Article.find({author: uid})
+
+  ctx.body = {
+    code: 0,
+    count: data.length,
+    data
+  }
+}
+
+// 删除 用户 文章
+exports.del = async ctx => {
+  const articleId = ctx.params.id
+  let res = {
+    state: 1,
+    message: '删除 成功'
+  }
+  await Article.findById({_id: articleId}).then(data => {
+    // 这里 的 data 就是 new Article() 这个 实例
+    // 实例 调用 的 方法 就是 构造函数 原型上的 方法，只有 原型上的 方法 被 调用的 时候 ，schema的 钩子 才能 监听到。
+    data.remove() 
+  }).catch(err => {
+    res = {
+      state: 0,
+      message: err
+    }
+  })
+
+  ctx.body = res
 }

@@ -6,6 +6,7 @@ const logger = require('koa-logger')
 const body = require('koa-body')
 const session = require('koa-session')
 const { join } = require('path') 
+const compress = require('koa-compress')
 const app = new Koa
 
 app.keys = ['胖虎是个大帅比']
@@ -21,6 +22,14 @@ const CONFIG = {
 }
 
 app.use(logger())
+// 注册 资源压缩模块
+app.use(compress({
+  // filter (content_type) {
+  // 	return /text/i.test(content_type) // 检测到匹配的文件类型 为 true的 被压缩，如果希望所有的 都被 压缩，那么 删除 这个配置
+  // },
+  threshold: 2048, // size 大于 2kb的 都会被 压缩
+  flush: require('zlib').Z_SYNC_FLUSH
+}))
 // 注册session
 app.use(session(CONFIG, app)) // 手动把app传进去
 // 配置 koa-body 处理 post请求 数据

@@ -4,6 +4,7 @@ const user = require('../control/user')
 const article = require('../control/article')
 const comment = require('../control/comment')
 const admin = require('../control/admin')
+const upload = require('../util/upload')
 
 router.get('/', user.keepLog, article.getList)
 
@@ -54,8 +55,23 @@ router.get('/article/:id', user.keepLog, article.details)
 // 新增 评论
 router.post('/comment', user.keepLog, comment.save)
 
-// 文章 评论  头像
+// 后台管理 文章 评论 头像
 router.get('/admin/:id', user.keepLog, admin.index)
+
+// 头像上传
+router.post('/upload', user.keepLog, upload.single('file'), user.upload)
+
+// 获取用户所有评论
+router.get('/user/comments', user.keepLog, comment.comList)
+
+// 删除 用户 评论
+router.del('/comment/:id', user.keepLog, comment.del)
+
+// 获取用户 文章 列表
+router.get('/user/articles', user.keepLog, article.getArtList)
+
+// 删除 用户 文章
+router.del('/article/:id', user.keepLog, article.del)
 
 // 404页面
 router.get('*', async ctx => {

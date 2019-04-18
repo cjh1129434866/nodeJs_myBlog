@@ -1,13 +1,4 @@
-const { db } = require('../schema/config')
-
-const { ArticleSchema } = require('../schema/article')
-const Article = db.model('articles', ArticleSchema)
-
-const { userSchema } = require('../schema/user')
-const User = db.model('users', userSchema)
-
-const { CommentSchema } = require('../schema/comment')
-const Comment = db.model('comments', CommentSchema)
+const { Article, User,  Comment } = require('../models/models')
 
 exports.save = async ctx => {
   let message = {
@@ -52,4 +43,39 @@ exports.save = async ctx => {
   ctx.body = message  
 }
 
+// 后台查询用户 所有 评论
+exports.comList = async ctx => {
+  const uid = ctx.session.uid
+  const data = await Comment.find({from: uid})
+    .populate('article', 'title')
+
+    console.log('data', data)
+  ctx.body = {
+    code: 0,
+    count: data.length,
+    data
+  }  
+}
+
+// 删除用户评论
+exports.del = async ctx => {
+  let res = {
+    status: 1,
+    message: '删除 成功'
+  }
+  // 拿到commentId 删除对应 评论
+  const commentId = ctx.params.id
+  await Comment.findById({_id: commentId}).then(data => {
+    // 这里 的 data 就是 new Comment() 这个 实例
+    // 实例 调用 的 方法 就是 构造函数 原型上的 方法，只有 原型上的 方法 被 调用的 时候 ，schema的 钩子 才能 监听到。
+    data.remove() 
+  }).catch(err => {
+    res = {
+      status: 0,
+      message: err
+    }
+  })
+ 
+  ctx.body = res
+}
 
